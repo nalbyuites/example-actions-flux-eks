@@ -15,6 +15,7 @@ name: Build and Push to ECR
 env:
   AWS_DEFAULT_OUTPUT: json
   AWS_ACCOUNT_ID: ${{ secrets.ADMYB_AWS_ACCOUNT_ID }}
+  IMAGE_TAG: ${{ github.sha }}
   CONTAINER_IMAGE: example-eks:${{ github.sha }}
   ECR_REPOSITORY: example-eks-repo
 
@@ -43,7 +44,6 @@ jobs:
     - name: Build and tag the image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ github.sha }}
       run: |
         docker build -t $CONTAINER_IMAGE -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./app
            
