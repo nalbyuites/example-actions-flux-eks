@@ -19,6 +19,7 @@ env:
   AWS_ACCESS_KEY_ID: ${{ secrets.ADMYB_AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.ADMYB_AWS_SECRET_ACCESS_KEY }}
   CONTAINER_IMAGE: example-eks:${{ github.sha }}
+  ECR_REPOSITORY: example-eks-repo
 
 jobs:
   build-and-push:
@@ -30,22 +31,24 @@ jobs:
       uses: actions/checkout@master
 
     # Add steps here like linting, testing, minification, etc.
-      
-    - name: Setup ECR
-      run: |
-        # Login to AWS ECR
-        $( aws ecr get-login-password \
-        --region $AWS_DEFAULT_REGION \
-        | docker login \
-        --username AWS \
-        --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com )
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: $AWS_ACCESS_KEY_ID
+        aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
+        aws-region: $AWS_DEFAULT_REGION
 
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    
     - name: Build and tag the image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
       run: |
-        # Build and tag the image
-        docker build \
-          -t $CONTAINER_IMAGE \
-          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$CONTAINER_IMAGE ./app
+        docker build -t $CONTAINER_IMAGE -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./app
            
     # Add additional steps here like scanning of image
 
@@ -54,4 +57,4 @@ jobs:
       if: github.ref == 'refs/heads/master'
       run: |
         # Push image to AWS ECR
-        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$CONTAINER_IMAGE
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
