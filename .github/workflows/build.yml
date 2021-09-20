@@ -15,8 +15,6 @@ name: Build and Push to ECR
 env:
   AWS_DEFAULT_OUTPUT: json
   AWS_ACCOUNT_ID: ${{ secrets.ADMYB_AWS_ACCOUNT_ID }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.ADMYB_AWS_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.ADMYB_AWS_SECRET_ACCESS_KEY }}
   CONTAINER_IMAGE: example-eks:${{ github.sha }}
   ECR_REPOSITORY: example-eks-repo
 
@@ -34,8 +32,8 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: $AWS_ACCESS_KEY_ID
-        aws-secret-access-key: $AWS_SECRET_ACCESS_KEY
+        aws-access-key-id: ${{ secrets.ADMYB_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.ADMYB_AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-south-1
 
     - name: Login to Amazon ECR
